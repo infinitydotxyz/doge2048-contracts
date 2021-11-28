@@ -54,7 +54,7 @@ contract InfinityFactory is Ownable, ERC721Enumerable, ERC165Storage, IERC2981 {
   bytes4 private constant _INTERFACE_ID_ERC721 = 0x80ac58cd;
   bytes4 private constant _INTERFACE_ID_IERC2981 = 0x2a55205a;
 
-  constructor() ERC721('Doge2048', 'DOGE') {
+  constructor() ERC721('Doge 2048 NFT', '2048') {
     _registerInterface(_INTERFACE_ID_ERC721);
     _registerInterface(_INTERFACE_ID_IERC2981);
   }

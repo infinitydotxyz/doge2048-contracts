@@ -17,10 +17,6 @@ contract OwnableByERC721 {
     _;
   }
 
-  /**
-        @dev Sets the NFT factory address
-        @param nftAddress Address of the NFT factory
-     */
   function _setNFT(address nftAddress, uint256 tokenId) internal {
     _nftAddress = nftAddress;
     _tokenId = tokenId;
@@ -30,7 +26,7 @@ contract OwnableByERC721 {
         @dev Returns the NFT factory address that created this NFT
         @return nftAddress Address of the NFT factory
      */
-  function nft() public view virtual returns (address nftAddress) {
+  function nftFactory() public view virtual returns (address nftAddress) {
     return _nftAddress;
   }
 
