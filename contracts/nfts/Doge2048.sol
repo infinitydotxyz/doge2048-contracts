@@ -10,7 +10,6 @@ import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {TransferHelper} from '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
 contract Doge2048 is ERC20Vault, Initializable {
-  uint8 public level;
   uint32 public score;
   uint32 public numPlays;
 
@@ -68,7 +67,6 @@ contract Doge2048 is ERC20Vault, Initializable {
   function saveState(
     address gameToken,
     uint256 gameTokensPerPlay,
-    uint8 newLevel,
     uint32 newScore,
     address pool
   ) external onlyGame {
@@ -79,7 +77,6 @@ contract Doge2048 is ERC20Vault, Initializable {
 
     // update score only if best score
     if (newScore > score) {
-      level = newLevel;
       score = newScore;
     }
     // update num plays
