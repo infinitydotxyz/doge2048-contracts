@@ -8,19 +8,12 @@ import {OwnableByERC721} from '../utils/OwnableByERC721.sol';
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {TransferHelper} from '@uniswap/lib/contracts/libraries/TransferHelper.sol';
+import {IInfinityFactory} from '../InfinityFactory.sol';
 
 contract Doge2048 is ERC20Vault, Initializable {
+  string name = 'doge2048';
   uint32 public score;
   uint32 public numPlays;
-
-  mapping(address => uint256) public gameTokenBalances;
-
-  /* modifiers */
-  // set to the minting factory's owner
-  modifier onlyGame() {
-    require(msg.sender == factoryOwner(), 'only game');
-    _;
-  }
 
   /* initialization functions */
 
@@ -38,42 +31,13 @@ contract Doge2048 is ERC20Vault, Initializable {
     return IERC20(token).balanceOf(address(this));
   }
 
-  /** ONLY OWNER **/
-
-  function topupGameTokenBalance(address gameToken, uint256 amount) external onlyOwner {
-    require(
-      IERC20(gameToken).balanceOf(address(this)) >= gameTokenBalances[gameToken] + amount,
-      'ERC20Vault: insufficient balance'
-    );
-    gameTokenBalances[gameToken] = gameTokenBalances[gameToken] + amount;
-  }
-
-  function reduceGameTokenBalance(address gameToken, uint256 amount) external onlyOwner {
-    require(gameTokenBalances[gameToken] >= amount, 'insufficient game token balance');
-    gameTokenBalances[gameToken] = gameTokenBalances[gameToken] - amount;
-  }
-
-  /** ONLY GAME **/
-
-  function initializeGameTokenBalance(address gameToken, uint256 amount) external onlyGame {
-    require(
-      IERC20(gameToken).balanceOf(address(this)) >= gameTokenBalances[gameToken] + amount,
-      'ERC20Vault: insufficient balance'
-    );
-    require(numPlays == 0, 'game already played');
-    gameTokenBalances[gameToken] = gameTokenBalances[gameToken] + amount;
-  }
-
   function saveState(
     address gameToken,
     uint256 gameTokensPerPlay,
-    uint32 newScore,
-    address pool
-  ) external onlyGame {
+    uint32 newScore
+  ) external onlyOwner {
     // check for sufficient balance required to play
-    require(IERC20(gameToken).balanceOf(address(this)) >= gameTokensPerPlay, 'ERC20Vault: insufficient balance');
-    require(gameTokenBalances[gameToken] >= gameTokensPerPlay, 'insufficient game token balance');
-    require(pool != address(0), 'pool address is null');
+    require(IERC20(gameToken).balanceOf(address(this)) >= gameTokensPerPlay, 'insufficient game token balance');
 
     // update score only if best score
     if (newScore > score) {
@@ -81,10 +45,9 @@ contract Doge2048 is ERC20Vault, Initializable {
     }
     // update num plays
     numPlays++;
-    // update game balances
-    gameTokenBalances[gameToken] = gameTokenBalances[gameToken] - gameTokensPerPlay;
 
     // deduct tokens required to play
+    address pool = IInfinityFactory(nftFactory()).getPrizePool(name);
     TransferHelper.safeTransfer(gameToken, pool, gameTokensPerPlay);
   }
 }

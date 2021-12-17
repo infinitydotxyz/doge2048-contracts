@@ -13,9 +13,13 @@ import {ERC165Storage} from '@openzeppelin/contracts/utils/introspection/ERC165S
 import './interfaces/IERC2981.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
 
+interface IInfinityFactory {
+  function getPrizePool(string calldata game) external returns (address);
+}
+
 /// @title InfinityFactory
 /// @dev Contract that mints NFTs of different variations of a collection
-contract InfinityFactory is Ownable, ERC721Enumerable, ERC165Storage, IERC2981 {
+contract InfinityFactory is Ownable, ERC721Enumerable, ERC165Storage, IERC2981, IInfinityFactory {
   using SafeMath for uint256;
   using EnumerableSet for EnumerableSet.AddressSet;
   using Counters for Counters.Counter;
@@ -31,6 +35,7 @@ contract InfinityFactory is Ownable, ERC721Enumerable, ERC165Storage, IERC2981 {
   mapping(string => uint256) public maxTeamMints;
   mapping(uint256 => address) public tokenIdToInstance;
   mapping(string => Royalty) private _royalties;
+  mapping(string => address) public prizePools;
   string public baseUri;
   struct Royalty {
     address royaltyAddress;
@@ -94,6 +99,10 @@ contract InfinityFactory is Ownable, ERC721Enumerable, ERC165Storage, IERC2981 {
   }
 
   /* getter functions */
+
+  function getPrizePool(string calldata game) external view override returns (address) {
+    return prizePools[game];
+  }
 
   function numVariations() public view returns (uint256) {
     return variationNames.length;
@@ -277,6 +286,10 @@ contract InfinityFactory is Ownable, ERC721Enumerable, ERC165Storage, IERC2981 {
     bool old = isMinting[variationName];
     isMinting[variationName] = false;
     emit UpdatedMintingStatus(variationName, old, isMinting[variationName]);
+  }
+
+  function setPrizePool(string calldata game, address addr) external onlyOwner {
+    prizePools[game] = addr;
   }
 
   function transferETH(address to, uint256 amount) external payable onlyOwner {
