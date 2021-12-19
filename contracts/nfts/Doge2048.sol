@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity 0.8.4;
 
-import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import {ERC20Vault} from '../ERC20Vault.sol';
 import {ERC2981} from '../utils/ERC2981.sol';
 import {OwnableByERC721} from '../utils/OwnableByERC721.sol';
@@ -18,7 +18,7 @@ contract Doge2048 is ERC20Vault, Initializable {
   /* initialization functions */
 
   function initialize(uint256 tokenId) external virtual override initializer {
-    name='doge2048';
+    name = 'doge2048';
     OwnableByERC721._setNFT(msg.sender, tokenId);
   }
 
@@ -29,19 +29,18 @@ contract Doge2048 is ERC20Vault, Initializable {
   }
 
   function getTokenBalance(address token) public view returns (uint256) {
-    return IERC20(token).balanceOf(address(this));
+    return ERC20(token).balanceOf(address(this));
   }
 
-  function saveState(
-    address gameToken,
-    uint32 newScore
-  ) external onlyOwner {
+  function saveState(address gameToken, uint32 newScore) external onlyOwner {
     // check if token is valid
     require(IInfinityFactory(nftFactory()).isValidGameToken(name, gameToken), 'invalid game token');
 
     // check for sufficient balance required to play
     uint32 gameTokensPerPlay = IInfinityFactory(nftFactory()).gameTokensPerPlay(name, gameToken);
-    require(IERC20(gameToken).balanceOf(address(this)) >= gameTokensPerPlay, 'insufficient game token balance');
+    uint8 decimals = ERC20(gameToken).decimals();
+    uint256 numRequired = gameTokensPerPlay * (10**decimals);
+    require(ERC20(gameToken).balanceOf(address(this)) >= numRequired, 'insufficient game token balance');
 
     // update score only if best score
     if (newScore > score) {
