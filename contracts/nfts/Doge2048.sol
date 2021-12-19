@@ -11,13 +11,14 @@ import {TransferHelper} from '@uniswap/lib/contracts/libraries/TransferHelper.so
 import {IInfinityFactory} from '../InfinityFactory.sol';
 
 contract Doge2048 is ERC20Vault, Initializable {
-  string name = 'doge2048';
+  string public name;
   uint32 public score;
   uint32 public numPlays;
 
   /* initialization functions */
 
   function initialize(uint256 tokenId) external virtual override initializer {
+    name='doge2048';
     OwnableByERC721._setNFT(msg.sender, tokenId);
   }
 
