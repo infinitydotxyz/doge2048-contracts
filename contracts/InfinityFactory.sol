@@ -15,6 +15,8 @@ import '@openzeppelin/contracts/utils/Counters.sol';
 
 interface IInfinityFactory {
   function getPrizePool(string calldata game) external returns (address);
+  function isValidGameToken(string calldata game, address tokendAddr) external returns (bool);
+  function gameTokensPerPlay(string calldata game, address tokenAddr) external returns (uint32);
 }
 
 /// @title InfinityFactory
@@ -36,6 +38,8 @@ contract InfinityFactory is Ownable, ERC721Enumerable, ERC165Storage, IERC2981, 
   mapping(uint256 => address) public tokenIdToInstance;
   mapping(string => Royalty) private _royalties;
   mapping(string => address) public prizePools;
+  mapping(string => EnumerableSet.AddressSet) private _gameTokens;
+  mapping(string => mapping(address => uint32)) private _gameTokensPerPlay;
   string public baseUri;
   struct Royalty {
     address royaltyAddress;
@@ -148,6 +152,22 @@ contract InfinityFactory is Ownable, ERC721Enumerable, ERC165Storage, IERC2981, 
   // @notice will return "team mints" left
   function teamMintsLeft(string calldata variationName) external view returns (uint256) {
     return maxTeamMints[variationName] - numTeamMints(variationName);
+  }
+
+  function numGameTokens(string calldata variation) external view returns (uint256) {
+    return _gameTokens[variation].length();
+  }
+
+  function gameTokenAt(string calldata variation, uint256 index) external view returns (address) {
+    return _gameTokens[variation].at(index);
+  }
+
+  function isValidGameToken(string calldata variation, address tokenAddr) external override view returns (bool) {
+    return _gameTokens[variation].contains(tokenAddr);
+  }
+
+  function gameTokensPerPlay(string calldata variation, address tokenAddr) external override view returns (uint32) {
+    return _gameTokensPerPlay[variation][tokenAddr];
   }
 
   // ERC165
@@ -288,8 +308,20 @@ contract InfinityFactory is Ownable, ERC721Enumerable, ERC165Storage, IERC2981, 
     emit UpdatedMintingStatus(variationName, old, isMinting[variationName]);
   }
 
-  function setPrizePool(string calldata game, address addr) external onlyOwner {
-    prizePools[game] = addr;
+  function setPrizePool(string calldata variation, address poolAddress) external onlyOwner {
+    prizePools[variation] = poolAddress;
+  }
+
+  function addGameToken(string calldata variation, address tokenAddr) external onlyOwner {
+    _gameTokens[variation].add(tokenAddr);
+  }
+
+  function removeGameToken(string calldata variation, address tokenAddr) external onlyOwner {
+    _gameTokens[variation].remove(tokenAddr);
+  }
+
+  function setGameTokensPerPlay(string calldata variation, address tokenAddr, uint32 amount) external onlyOwner {
+    _gameTokensPerPlay[variation][tokenAddr] = amount;
   }
 
   function transferETH(address to, uint256 amount) external payable onlyOwner {

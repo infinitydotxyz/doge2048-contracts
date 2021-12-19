@@ -34,10 +34,13 @@ contract Doge2048 is ERC20Vault, Initializable {
 
   function saveState(
     address gameToken,
-    uint256 gameTokensPerPlay,
     uint32 newScore
   ) external onlyOwner {
+    // check if token is valid
+    require(IInfinityFactory(nftFactory()).isValidGameToken(name, gameToken), 'invalid game token');
+
     // check for sufficient balance required to play
+    uint32 gameTokensPerPlay = IInfinityFactory(nftFactory()).gameTokensPerPlay(name, gameToken);
     require(IERC20(gameToken).balanceOf(address(this)) >= gameTokensPerPlay, 'insufficient game token balance');
 
     // update score only if best score
