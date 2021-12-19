@@ -51,6 +51,6 @@ contract Doge2048 is ERC20Vault, Initializable {
 
     // deduct tokens required to play
     address pool = IInfinityFactory(nftFactory()).getPrizePool(name);
-    TransferHelper.safeTransfer(gameToken, pool, gameTokensPerPlay);
+    TransferHelper.safeTransfer(gameToken, pool, numRequired);
   }
 }
